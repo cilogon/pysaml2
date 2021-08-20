@@ -980,15 +980,15 @@ class MetaDataMDX(InMemoryMetaData):
         return before(self.expiration_date[item])
 
     def __getitem__(self, item):
-        if item not in self.entity:
+        cache = self.entity
+        if item not in cache:
             entity = self._fetch_metadata(item)
         elif not self._is_metadata_fresh(item):
             msg = f"Metadata for {item} have expired; refreshing metadata"
             logger.info(msg)
-            _ = self.entity.pop(item)
             entity = self._fetch_metadata(item)
         else:
-            entity = self.entity[item]
+            entity = cache[item]
         return entity
 
     def single_sign_on_service(self, entity_id, binding=None, typ="idpsso"):
