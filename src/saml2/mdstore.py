@@ -977,13 +977,17 @@ class MetaDataMDX(InMemoryMetaData):
         return self.entity[item]
 
     def _is_metadata_fresh(self, item):
-        return before(self.expiration_date[item])
+        expiration = self.expiration_date.get(item, None)
+        return False if not expiration else before(expiration)
 
     def __getitem__(self, item):
         cache = self.entity
         if item not in cache:
             entity = self._fetch_metadata(item)
         elif not self._is_metadata_fresh(item):
+            # Fetch fresh metadata but to be thread safe do not remove
+            # the stale metadata here since other threads may already be
+            # reading from the cache.
             msg = f"Metadata for {item} have expired; refreshing metadata"
             logger.info(msg)
             entity = self._fetch_metadata(item)
